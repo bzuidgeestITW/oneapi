@@ -34,4 +34,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Synigo.OneApi.Providers\Synigo.OneApi.Providers.csproj" />
+  </ItemGroup>
 </Project>

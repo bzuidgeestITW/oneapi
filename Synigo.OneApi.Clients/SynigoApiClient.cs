@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Synigo.OneApi.Providers.Tokens;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -7,37 +8,24 @@ namespace Synigo.OneApi.Clients
 {
     public class SynigoApiClient
     {
-        private readonly string _clientId;
-        private readonly string _clientSecret;
-        private readonly string _tenantId;
-        private readonly string _synigoApiUrl;
         private static HttpClient _httpClient = new HttpClient();
 
-        public SynigoApiClient(IConfiguration configuration)
+        private readonly ITokenProvider _tokenProvider;
+
+        public SynigoApiClient(IConfiguration configuration, ITokenProvider tokenProvider)
         {
-            _clientId = configuration.GetSection("AzureAd").GetValue<string>("ClientId");
-            _clientSecret = configuration.GetSection("AzureAd").GetValue<string>("ClientSecret");
-            _tenantId = configuration.GetSection("AzureAd").GetValue<string>("TenantId");
-            _synigoApiUrl = configuration.GetSection("AzureAd").GetValue<string>("SynigoApiUrl");
+            _tokenProvider = tokenProvider;
         }
 
-        public SynigoApiClient(string clientId, string clientSecret, string tenantId, string synigoApiUrl)
+        public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
         {
-            _clientId = clientId;
-            _clientSecret = clientSecret;
-            _tenantId = tenantId;
-            _synigoApiUrl = synigoApiUrl;
-        }
-
-        public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, string token)
-        {
-            request = AuthorizeRequest(request, token);
+            request = await AuthorizeRequest(request);
             return await _httpClient.SendAsync(request);
         }
 
-        private HttpRequestMessage AuthorizeRequest(HttpRequestMessage request, string token)
+        private async Task<HttpRequestMessage> AuthorizeRequest(HttpRequestMessage request)
         {
-            request.Headers.Add("Authorization", $"Bearer {token}");
+            request.Headers.Add("Authorization", "Bearer " + await _tokenProvider.GetSynigoApplicationTokenAsync());
             return request;
         }
 

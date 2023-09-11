@@ -13,18 +13,11 @@ namespace Synigo.OneApi.Clients.Notifications
         private readonly string _synigoApiUrl;
         private readonly SynigoApiClient _synigoApiClient;
 
-        public NotificationsClient(IConfiguration configuration)
+        public NotificationsClient(IConfiguration configuration, SynigoApiClient synigoApiClient)
         {
             _tenantId = configuration.GetSection("AzureAd").GetValue<string>("TenantId");
             _synigoApiUrl = configuration.GetSection("AzureAd").GetValue<string>("SynigoApiUrl");
-            _synigoApiClient = new SynigoApiClient(configuration);
-        }
-
-        public NotificationsClient(string clientId, string clientSecret, string tenantId, string synigoApiUrl)
-        {
-            _tenantId = tenantId;
-            _synigoApiUrl = synigoApiUrl;
-            _synigoApiClient = new SynigoApiClient(clientId, clientSecret, tenantId, synigoApiUrl);
+            _synigoApiClient = synigoApiClient;
         }
 
         /// <summary>
@@ -32,12 +25,12 @@ namespace Synigo.OneApi.Clients.Notifications
         /// </summary>
         /// <param name="notification" cref="NotificationSource">received NotificationSource model</param>
         /// <returns cref="HttpResponseMessage">Returns HttpResponseMessage</returns>
-        public async Task<HttpResponseMessage> SendNotification(PortalNotificationModel notification, string token)
+        public async Task<HttpResponseMessage> SendNotification(PortalNotificationModel notification)
         {
             var messageNotification = new MessageNotification(_tenantId, notification);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{_synigoApiUrl}/messagenotifications/{_tenantId}/messageNotification");
             request.Content = new StringContent(JsonConvert.SerializeObject(messageNotification));
-            return await _synigoApiClient.SendAsync(request, token);
+            return await _synigoApiClient.SendAsync(request);
         }
 
         /// <summary>
@@ -45,12 +38,12 @@ namespace Synigo.OneApi.Clients.Notifications
         /// </summary>
         /// <param name="pushNotification" cref="PushNotification">Push notification model</param>
         /// <returns cref="HttpResponseMessage">Returns HttpResponseMessage</returns>
-        public async Task<HttpResponseMessage> SendPushNotification(PushNotificationModel pushNotificationModel, string token)
+        public async Task<HttpResponseMessage> SendPushNotification(PushNotificationModel pushNotificationModel)
         {
             var pushNotification = new PushNotification(_tenantId, pushNotificationModel);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{_synigoApiUrl}/pushnotifications/{_tenantId}/message");
             request.Content = new StringContent(JsonConvert.SerializeObject(pushNotification));
-            return await _synigoApiClient.SendAsync(request, token);
+            return await _synigoApiClient.SendAsync(request);
         }
     }
 }
